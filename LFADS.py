@@ -127,17 +127,3 @@ class LFADS(nn.Module):
         return rates, kl_ics, kl_ctrl_total, factors_all
 
 
-# ===============================================================
-# LOSS FUNCTIONS
-# ===============================================================
-def poisson_loss(rates, x):
-    return (rates - x * torch.log(rates + 1e-8)).mean()
-
-
-def lfads_loss(rates, x, kl_ic, kl_ctrl, kl_weight):
-    rec = poisson_loss(rates, x)
-    total = rec + kl_weight * (kl_ic + kl_ctrl)
-    return total, rec
-
-
-
