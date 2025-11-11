@@ -4,6 +4,7 @@ Created on Fri Nov  7 21:17:16 2025
 
 @author: joeyl
 """
+import torch
 
 def train_lfads(
     model,
