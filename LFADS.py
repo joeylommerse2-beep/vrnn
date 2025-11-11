@@ -21,10 +21,17 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 
+# Gaussian initialization
+def init_weights_gaussian(m):
+    """Initialize weights from a Gaussian distribution (mean=0, std=0.01)."""
+    if isinstance(m, (nn.Linear, nn.GRU, nn.GRUCell, nn.LSTM, nn.RNN)):
+        for name, param in m.named_parameters():
+            if "weight" in name:
+                nn.init.normal_(param, mean=0.0, std=0.01)
+            elif "bias" in name:
+                nn.init.zeros_(param)
 
-# ===============================================================
-# LFADS MODEL
-# ===============================================================
+
 class LFADS(nn.Module):
     def __init__(
         self,
@@ -55,9 +62,11 @@ class LFADS(nn.Module):
         self.generator = nn.GRU(latent_dim, generator_hidden, batch_first=True)
         self.generator_to_factors = nn.Linear(generator_hidden, factor_dim)
 
-        # Decoder (factors → rates)
+        # Decoder (factors to rates)
         self.factors_to_rates = nn.Linear(factor_dim, input_dim)
 
+        # Apply Gaussian initialization to all parameters
+        self.apply(init_weights_gaussian)
     def encode_initial_condition(self, x):
         _, h = self.encoder(x)
         h = torch.cat([h[0], h[1]], dim=-1)
@@ -116,7 +125,7 @@ class LFADS(nn.Module):
             factors = self.generator_to_factors(g_h.squeeze(0))
             prev_factors = factors
 
-            rates_t = torch.exp(self.factors_to_rates(factors))
+            rates_t = torch.exp(self.factors_to_rates(factors)) + 1e-6
             rates.append(rates_t.unsqueeze(1))
             factors_all.append(factors.unsqueeze(1))
 
