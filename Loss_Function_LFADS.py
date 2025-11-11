@@ -4,6 +4,7 @@ Created on Sat Nov  8 10:06:39 2025
 
 @author: joeyl
 """
+import torch 
 
 def poisson_loss(rates, x):
     return (rates - x * torch.log(rates + 1e-8)).sum(dim=(1,2)).mean()
