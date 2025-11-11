@@ -29,7 +29,7 @@ def train_lfads(
 
         kl_weight = min(kl_end, kl_start + (kl_end - kl_start) * epoch / kl_anneal_epochs)
 
-        for xb, in train_loader:
+        for xb in train_loader:
             xb = xb.to(device)
             rates, kl_ic, kl_ctrl, _ = model(xb)
             loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
@@ -46,7 +46,7 @@ def train_lfads(
         model.eval()
         with torch.no_grad():
             val_loss = 0
-            for xb, in val_loader:
+            for xb in val_loader:
                 xb = xb.to(device)
                 rates, kl_ic, kl_ctrl, _ = model(xb)
                 loss, _ = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
