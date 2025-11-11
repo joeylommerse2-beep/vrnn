@@ -31,6 +31,7 @@ def train_lfads(
 
         for xb in train_loader:
             xb = xb.to(device).float()
+            xb = xb.permute(0, 2, 1)
             rates, kl_ic, kl_ctrl, _ = model(xb)
             loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
 
@@ -48,6 +49,7 @@ def train_lfads(
             val_loss = 0
             for xb in val_loader:
                 xb = xb.to(device).float()
+                xb = xb.permute(0, 2, 1)
                 rates, kl_ic, kl_ctrl, _ = model(xb)
                 loss, _ = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
                 val_loss += loss.item()
