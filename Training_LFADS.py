@@ -24,6 +24,7 @@ def train_lfads(
     train_losses, val_losses = [], []
     kl_ic_vals = []
     kl_ctrl_vals = []
+    total_kl_ic, total_kl_ctrl = 0, 0
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -51,7 +52,7 @@ def train_lfads(
             total_kl += (kl_ic + kl_ctrl).item()
         # average per batch for this epoch
         kl_ic_vals.append(total_kl_ic / len(train_loader))
-        kl_ctrl_vals.append(total_kl_ctrl / len(train_loader)
+        kl_ctrl_vals.append(total_kl_ctrl / len(train_loader))
 
         model.eval()
         with torch.no_grad():
