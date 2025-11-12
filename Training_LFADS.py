@@ -22,6 +22,8 @@ def train_lfads(
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     train_losses, val_losses = [], []
+    kl_ic_vals = []
+    kl_ctrl_vals = []
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -39,10 +41,17 @@ def train_lfads(
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 200.0)
             opt.step()
+            
+            # accumulate KL values
+            total_kl_ic += kl_ic.item()
+            total_kl_ctrl += kl_ctrl.item()
 
             total_loss += loss.item()
             total_rec += rec.item()
             total_kl += (kl_ic + kl_ctrl).item()
+        # average per batch for this epoch
+        kl_ic_vals.append(total_kl_ic / len(train_loader))
+        kl_ctrl_vals.append(total_kl_ctrl / len(train_loader)
 
         model.eval()
         with torch.no_grad():
@@ -62,5 +71,5 @@ def train_lfads(
             f"Train loss {train_losses[-1]:.3f} | Val loss {val_losses[-1]:.3f}"
         )
 
-    return model, (train_losses, val_losses)
+    return model, (train_losses, val_losses), (kl_ic_vals, kl_ctrl_vals)
 
