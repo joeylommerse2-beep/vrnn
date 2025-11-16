@@ -36,11 +36,11 @@ class LFADS(nn.Module):
     def __init__(
         self,
         input_dim,
-        latent_dim=16,
-        factor_dim=8,
+        latent_dim=8,
+        factor_dim=5,
         controller_dim=8,
         generator_hidden=64,
-        controller_hidden=64,
+        controller_hidden=32,
         encoder_hidden=64,
     ):
         super().__init__()
