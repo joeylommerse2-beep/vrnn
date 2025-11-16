@@ -72,6 +72,8 @@ class LFADS(nn.Module):
         h = torch.cat([h[0], h[1]], dim=-1)
         mu = self.encoder_mu(h)
         logvar = self.encoder_logvar(h)
+        mu = torch.clamp(mu_u,     -5.0, 5.0)
+        logvar = torch.clamp(logvar, -5.0, 5.0)
         return mu, logvar
 
     def sample(self, mu, logvar):
