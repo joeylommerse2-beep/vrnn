@@ -34,7 +34,7 @@ def train_lfads(
 
         for xb in train_loader:
             xb = xb.to(device).float()
-            print("sample shape:", xb_sample.shape)   # should be (batch, time, neurons)
+            print("sample shape:", xb.shape)   # should be (batch, time, neurons)
 
             rates, kl_ic, kl_ctrl, factors = model(xb)
             loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
