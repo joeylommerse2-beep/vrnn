@@ -34,8 +34,13 @@ def train_lfads(
 
         for xb in train_loader:
             xb = xb.to(device).float()
-            rates, kl_ic, kl_ctrl, _ = model(xb)
+            print("sample shape:", xb_sample.shape)   # should be (batch, time, neurons)
+
+            rates, kl_ic, kl_ctrl, factors = model(xb)
             loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
+            print("rates shape:", rates.shape, "factors shape:", factors.shape)
+            print("rates mean/std:", rates.mean().item(), rates.std().item())
+            print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
 
             opt.zero_grad()
             loss.backward()
