@@ -11,11 +11,11 @@ def train_lfads(
     train_loader,
     val_loader,
     lfads_loss,
-    epochs=100,
+    epochs=300,
     lr=3e-5,
-    kl_start=1e-6,
+    kl_start=0,
     kl_end=1.0,
-    kl_anneal_epochs=75,
+    kl_anneal_epochs=100,
     device="cuda" if torch.cuda.is_available() else "cpu",
 ):
     model = model.to(device)
@@ -31,20 +31,26 @@ def train_lfads(
         total_loss, total_rec, total_kl = 0, 0, 0
 
         kl_weight = min(kl_end, kl_start + (kl_end - kl_start) * epoch / kl_anneal_epochs)
+        if epoch <= 40:
+            rec_weight = 10
+        elif 40 < epoch <= 80:
+            rec_weight = 5
+        elif epoch > 80:
+            rec_weight = 1
 
         for xb in train_loader:
             xb = xb.to(device).float()
             print("sample shape:", xb.shape)   # should be (batch, time, neurons)
 
             rates, kl_ic, kl_ctrl, factors = model(xb)
-            loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
+            loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight, rec_weight)
             print("rates shape:", rates.shape, "factors shape:", factors.shape)
             print("rates mean/std:", rates.mean().item(), rates.std().item())
             print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
 
             opt.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 2.0)
             opt.step()
             
             # accumulate KL values
