@@ -70,7 +70,7 @@ def train_lfads(
             for xb in val_loader:
                 xb = xb.to(device).float()
                 rates, kl_ic, kl_ctrl, _ = model(xb)
-                loss, _ = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight)
+                loss, _ = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight, rec_weight)
                 val_loss += loss.item()
 
         train_losses.append(total_loss / len(train_loader))
