@@ -10,7 +10,7 @@ def poisson_loss(rates, x):
     return (rates - x * torch.log(rates + 1e-8)).sum(dim=(1,2)).mean()
 
 
-def lfads_loss(rates, x, kl_ic, kl_ctrl, kl_weight):
+def lfads_loss(rates, x, kl_ic, kl_ctrl, kl_weight, rec_weight):
     rec = poisson_loss(rates, x)
-    total = rec + kl_weight * (kl_ic + kl_ctrl)
+    total = rec_weight * rec + kl_weight * (kl_ic + kl_ctrl)
     return total, rec
