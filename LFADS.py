@@ -36,11 +36,11 @@ class LFADS(nn.Module):
     def __init__(
         self,
         input_dim,
-        latent_dim=8,
-        factor_dim=5,
+        latent_dim=16,
+        factor_dim=8,
         controller_dim=8,
         generator_hidden=64,
-        controller_hidden=32,
+        controller_hidden=64,
         encoder_hidden=64,
     ):
         super().__init__()
@@ -72,7 +72,7 @@ class LFADS(nn.Module):
         h = torch.cat([h[0], h[1]], dim=-1)
         mu = self.encoder_mu(h)
         logvar = self.encoder_logvar(h)
-        mu = torch.clamp(mu,     -5.0, 5.0)
+        mu = torch.clamp(mu, -5.0, 5.0)
         logvar = torch.clamp(logvar, -5.0, 5.0)
         return mu, logvar
 
