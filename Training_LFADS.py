@@ -12,7 +12,7 @@ def train_lfads(
     val_loader,
     lfads_loss,
     epochs=100,
-    lr=1e-4,
+    lr=3e-5,
     kl_start=1e-6,
     kl_end=1.0,
     kl_anneal_epochs=75,
