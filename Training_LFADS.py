@@ -12,9 +12,9 @@ def train_lfads(
     val_loader,
     lfads_loss,
     epochs=300,
-    lr=3e-5,
+    lr=3e-4,
     kl_start=0,
-    kl_end=1.0,
+    kl_end=1e-3,
     kl_anneal_epochs=100,
     device="cuda" if torch.cuda.is_available() else "cpu",
 ):
@@ -29,15 +29,16 @@ def train_lfads(
     for epoch in range(1, epochs + 1):
         model.train()
         total_loss, total_rec, total_kl = 0, 0, 0
+        total_kl_ic, total_kl_ctrl = 0.0, 0.0
 
         kl_weight = min(kl_end, kl_start + (kl_end - kl_start) * epoch / kl_anneal_epochs)
-        if epoch <= 40:
+        if epoch <= 50:
             rec_weight = 10
-        elif 40 < epoch <= 80:
+        #elif 40 < epoch <= 80:
+            #rec_weight = 5
+        elif epoch > 50:
             rec_weight = 5
-        elif epoch > 80:
-            rec_weight = 1
-
+        
         for xb in train_loader:
             xb = xb.to(device).float()
             print("sample shape:", xb.shape)   # should be (batch, time, neurons)
