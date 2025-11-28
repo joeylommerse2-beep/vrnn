@@ -52,7 +52,7 @@ class LFADS(nn.Module):
         self.encoder = nn.GRU(input_dim, encoder_hidden, batch_first=True, bidirectional=True)
         self.encoder_mu = nn.Linear(2 * encoder_hidden, latent_dim)
         self.encoder_logvar = nn.Linear(2 * encoder_hidden, latent_dim)
-        self.ic_to_g0 = nn.Linear(latent_dim, self.generator.hidden_size)
+        self.ic_to_g0 = nn.Linear(latent_dim, generator_hidden)
 
         # Controller RNN (time-varying inputs)
         self.controller = nn.GRU(input_dim + factor_dim, controller_hidden, batch_first=True)
