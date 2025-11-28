@@ -52,6 +52,7 @@ class LFADS(nn.Module):
         self.encoder = nn.GRU(input_dim, encoder_hidden, batch_first=True, bidirectional=True)
         self.encoder_mu = nn.Linear(2 * encoder_hidden, latent_dim)
         self.encoder_logvar = nn.Linear(2 * encoder_hidden, latent_dim)
+        self.ic_to_g0 = nn.Linear(latent_dim, self.generator.hidden_size)
 
         # Controller RNN (time-varying inputs)
         self.controller = nn.GRU(input_dim + factor_dim, controller_hidden, batch_first=True)
@@ -95,7 +96,9 @@ class LFADS(nn.Module):
         # Encode initial condition
         mu0, logvar0 = self.encode_initial_condition(x)
         z0 = self.sample(mu0, logvar0)
-        g_h = torch.zeros(1, batch_size, self.generator.hidden_size, device=x.device)
+        
+        g0 = torch.tanh(self.ic_to_g0(z0))
+        g_h = g0.unsqueeze(0)
 
         kl_ics = 0.5 * torch.sum(
             torch.exp(logvar0) + mu0**2 - 1. - logvar0, dim=1
