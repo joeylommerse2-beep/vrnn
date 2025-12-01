@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 """
 Created on Mon Dec  1 11:15:04 2025
@@ -26,7 +25,7 @@ class SimpleLFADS(nn.Module):
         self.ic_to_g0 = nn.Linear(latent_dim, gen_hidden)
 
         # Generator: autonomous RNN
-        self.generator = nn.GRU(0, gen_hidden, batch_first=True)  # input_size=0 is not allowed; see below
+        self.generator = nn.GRU(1, gen_hidden, batch_first=True)
         self.generator_to_factors = nn.Linear(gen_hidden, factor_dim)
 
         self.factors_to_rates = nn.Linear(factor_dim, input_dim)
