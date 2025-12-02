@@ -34,21 +34,39 @@ def train_lfads(
         total_kl_ic, total_kl_ctrl = 0.0, 0.0
 
         kl_weight = min(kl_end, kl_start + (kl_end - kl_start) * epoch / kl_anneal_epochs)
-        if epoch <= 50:
-            rec_weight = 10
+        #if epoch <= 50:
+        #    rec_weight = 10
         #elif 40 < epoch <= 80:
             #rec_weight = 5
-        elif epoch > 50:
-            rec_weight = 5
+        #elif epoch > 50:
+        #    rec_weight = 5
+        rec_weight = 0
         
-        for xb in train_loader:
+        for batch in train_loader:
+            # Handle both (x,) and (x, latents) batches
+            if isinstance(batch, (tuple, list)) and len(batch) == 2:
+                xb, lat_b = batch
+                lat_b = lat_b.to(device).float()
+            else:
+                xb = batch
+                lat_b = None
+
             xb = xb.to(device).float()
-            print("sample shape:", xb.shape)   # should be (batch, time, neurons)
+            print("sample shape:", xb.shape)   # (batch, time, neurons)
 
             rates, kl_ic, kl_ctrl, factors = model(xb)
-            loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight,
-                                   rec_weight, factors=factors,
-                                   ortho_weight=ortho_weight)
+
+            loss, rec = lfads_loss(
+                rates,
+                xb,
+                kl_ic,
+                kl_ctrl,
+                kl_weight,
+                rec_weight,
+                factors=factors,
+                latent_targets=lat_b,
+                latent_align_weight=latent_align_weight,
+            )
             print("rates shape:", rates.shape, "factors shape:", factors.shape)
             print("rates mean/std:", rates.mean().item(), rates.std().item())
             print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
