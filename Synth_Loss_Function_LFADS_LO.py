@@ -9,14 +9,28 @@ import torch
 def poisson_loss(rates, x):
     return (rates - x * torch.log(rates + 1e-8)).sum(dim=(1,2)).mean()
 
-def latent_mse_loss(factors, latents_true):
+def latent_mse_loss(factors, latents_true, eps=1e-8):
     """
-    Supervised latent alignment for synthetic data:
-    directly penalize MSE between factors and true latents.
     factors:      (B, T, F)
     latents_true: (B, T, K)  # here F == K == 3
+
+    Z-score latents per dimension using stats from latents_true,
+    then compute MSE between normalized true and normalized factors.
+    This makes each dimension contribute roughly equally.
     """
-    return torch.mean((factors - latents_true) ** 2)
+    B, T, K = latents_true.shape
+
+    # Flatten for stats
+    L_flat = latents_true.reshape(B * T, K)
+    mean = L_flat.mean(dim=0, keepdim=True)                 # (1, K)
+    std  = L_flat.std(dim=0, keepdim=True) + eps            # (1, K)
+
+    # Normalize both true and predicted w.r.t. true stats
+    L_norm = (latents_true - mean) / std
+    F_norm = (factors      - mean) / std
+
+    return ((F_norm - L_norm) ** 2).mean()
+
 
 def lfads_loss(
     rates,
