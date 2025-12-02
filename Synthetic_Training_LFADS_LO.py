@@ -67,9 +67,14 @@ def train_lfads(
                 latent_targets=lat_b,
                 latent_align_weight=latent_align_weight,
             )
-            print("rates shape:", rates.shape, "factors shape:", factors.shape)
-            print("rates mean/std:", rates.mean().item(), rates.std().item())
-            print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
+            
+            if lat_b is not None and latent_align_weight > 0:
+                    with torch.no_grad():
+                        lat_mse = torch.mean((factors - lat_b) ** 2).item()
+                        print(f"latent MSE: {lat_mse:.4f}")
+            #print("rates shape:", rates.shape, "factors shape:", factors.shape)
+            #print("rates mean/std:", rates.mean().item(), rates.std().item())
+            #print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
 
             opt.zero_grad()
             loss.backward()
