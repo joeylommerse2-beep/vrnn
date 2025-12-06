@@ -13,7 +13,9 @@ def factor_orthogonality_loss(factors, eps=1e-8):
     F = factors.reshape(-1, factors.shape[-1])
     F = F - F.mean(dim=0, keepdim=True)
     C = (F.T @ F) / F.shape[0]
-    cov_penalty = ((C - torch.eye(F, device=C.device)) ** 2).mean()
+    Fdim = F.shape[-1]
+    I = torch.eye(Fdim, device=C.device, dtype=C.dtype)
+    cov_penalty = ((C - I) ** 2).mean()
 
     return cov_penalty
 
