@@ -1,0 +1,105 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Nov  7 21:17:16 2025
+
+@author: joeyl
+"""
+import torch
+
+def train_lfads(
+    model,
+    train_loader,
+    val_loader,
+    lfads_loss,
+    epochs=300,
+    lr=3e-4,
+    kl_start=0,
+    kl_end=1e-3,
+    kl_anneal_epochs=100,
+    ortho_weight=0.0,
+    device="cuda" if torch.cuda.is_available() else "cpu",
+):
+    model = model.to(device)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+
+    train_losses, val_losses = [], []
+    kl_ic_vals = []
+    kl_ctrl_vals = []
+    total_kl_ic, total_kl_ctrl = 0, 0
+
+    for epoch in range(1, epochs + 1):
+        model.train()
+        total_loss, total_rec, total_kl = 0, 0, 0
+        total_kl_ic, total_kl_ctrl = 0.0, 0.0
+
+        kl_weight = min(kl_end, kl_start + (kl_end - kl_start) * epoch / kl_anneal_epochs)
+        if epoch <= 50:
+            rec_weight = 10
+        #elif 40 < epoch <= 80:
+            #rec_weight = 5
+        elif epoch > 50:
+            rec_weight = 5
+        
+        for batch in train_loader:
+            # Handle both (x,) and (x, latents) cases
+            if isinstance(batch, (tuple, list)):
+                xb = batch[0]                     # spikes
+                lat_b = batch[1] if len(batch) > 1 else None  # latents (only for synthetic)
+                else:
+                    xb = batch
+                    lat_b = None
+
+            xb = xb.to(device).float()
+            if lat_b is not None:
+                lat_b = lat_b.to(device).float()
+
+            rates, kl_ic, kl_ctrl, factors = model(xb)
+            loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight,
+                                   rec_weight, factors=factors)
+            print("rates shape:", rates.shape, "factors shape:", factors.shape)
+            print("rates mean/std:", rates.mean().item(), rates.std().item())
+            print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
+
+            opt.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 2.0)
+            opt.step()
+            
+            # accumulate KL values
+            total_kl_ic += kl_ic.item()
+            total_kl_ctrl += kl_ctrl.item()
+
+            total_loss += loss.item()
+            total_rec += rec.item()
+            total_kl += (kl_ic + kl_ctrl).item()
+        # average per batch for this epoch
+        kl_ic_vals.append(total_kl_ic / len(train_loader))
+        kl_ctrl_vals.append(total_kl_ctrl / len(train_loader))
+
+        model.eval()
+        with torch.no_grad():
+            val_loss = 0
+            for batch in val_loader:
+                if isinstance(batch, (tuple, list)):
+                    xb = batch[0]   # spikes
+
+                else:
+                    xb = batch
+
+                xb = xb.to(device).float()
+                    
+                rates, kl_ic, kl_ctrl, factors = model(xb)
+                loss, _ = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight,
+                                     rec_weight, factors=factors)
+                val_loss += loss.item()
+
+        train_losses.append(total_loss / len(train_loader))
+        val_losses.append(val_loss / len(val_loader))
+
+        print(
+            f"Epoch {epoch:03d} | KLw {kl_weight:.3f} | "
+            f"Train loss {train_losses[-1]:.3f} | Val loss {val_losses[-1]:.3f}"
+        )
+
+    return model, (train_losses, val_losses), (kl_ic_vals, kl_ctrl_vals), lat_b
+
