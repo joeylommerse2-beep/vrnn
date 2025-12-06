@@ -46,8 +46,7 @@ def train_lfads(
 
             rates, kl_ic, kl_ctrl, factors = model(xb)
             loss, rec = lfads_loss(rates, xb, kl_ic, kl_ctrl, kl_weight,
-                                   rec_weight, factors=factors,
-                                   ortho_weight=ortho_weight)
+                                   rec_weight, factors=factors)
             print("rates shape:", rates.shape, "factors shape:", factors.shape)
             print("rates mean/std:", rates.mean().item(), rates.std().item())
             print("kl_ic, kl_ctrl:", kl_ic.item(), kl_ctrl.item())
