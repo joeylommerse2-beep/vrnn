@@ -45,9 +45,9 @@ def train_lfads(
             if isinstance(batch, (tuple, list)):
                 xb = batch[0]                     # spikes
                 lat_b = batch[1] if len(batch) > 1 else None  # latents (only for synthetic)
-                else:
-                    xb = batch
-                    lat_b = None
+            else:
+                xb = batch
+                lat_b = None
 
             xb = xb.to(device).float()
             if lat_b is not None:
