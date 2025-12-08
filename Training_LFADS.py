@@ -15,7 +15,7 @@ def train_lfads(
     lr=3e-4,
     kl_start=0,
     kl_end=1e-3,
-    kl_anneal_epochs=100,
+    kl_anneal_epochs=175,
     ortho_weight=0.0,
     device="cuda" if torch.cuda.is_available() else "cpu",
 ):
